@@ -25,10 +25,10 @@ UKF::UKF() {
   P_ = MatrixXd(5, 5);
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 3;
+  std_a_ = 0.2;//3; //was 30
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 30;
+  std_yawdd_ = 0.2;//3; // was 30
 
   // Laser measurement noise standard deviation position1 in m
   std_laspx_ = 0.15;
@@ -56,8 +56,9 @@ UKF::UKF() {
   is_initialized_ =  false;
   
   n_x_ = 5;
-  Xsig = MatrixXd(5, 11);
-  lambda_ = 3 - n_x_;
+  n_aug_ = 7;
+  Xsig_aug_ = MatrixXd(n_aug_, 2 * n_aug_ + 1);
+  lambda_ = 3 - n_aug_;
 }
 
 UKF::~UKF() {}
@@ -108,7 +109,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       
   }
   
-  x_ <<   5.7441,
+  x_ <<  5.7441,
          1.3800,
          2.2049,
          0.5015,
@@ -116,12 +117,11 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
   //set example covariance matrix
   //MatrixXd P = MatrixXd(n_x, n_x);
-  P_ <<     0.0043,   -0.0013,    0.0030,   -0.0022,   -0.0020,
+  P_ <<    0.0043,   -0.0013,    0.0030,   -0.0022,   -0.0020,
           -0.0013,    0.0077,    0.0011,    0.0071,    0.0060,
            0.0030,    0.0011,    0.0054,    0.0007,    0.0008,
           -0.0022,    0.0071,    0.0007,    0.0098,    0.0100,
           -0.0020,    0.0060,    0.0008,    0.0100,    0.0123;
-
 
     Prediction(5.5);
 
@@ -145,37 +145,54 @@ void UKF::Prediction(double delta_t) {
   vector, x_. Predict sigma points, the state, and the state covariance matrix.
   */
   
-  GenerateSigmaPoints(&Xsig);
-  std::cout << "Xsig = " << std::endl << Xsig << std::endl;
+  AugmentedSigmaPoints(&Xsig_aug_);
+  std::cout << "Xsig_aug = " << std::endl << Xsig_aug_ << std::endl;
 
-}
-
-void UKF::GenerateSigmaPoints(MatrixXd* Xsig_out) {
-
-  //create sigma point matrix
-  MatrixXd Xsig = MatrixXd(n_x_, 2 * n_x_ + 1);
-
-  //calculate square root of P
-  MatrixXd A = P_.llt().matrixL();
-
-  //set first column of sigma point matrix
-  Xsig.col(0)  = x_;
-
-  //set remaining sigma points
-  for (int i = 0; i < n_x_; i++)
-  {
-    Xsig.col(i+1)     = x_ + sqrt(lambda_+n_x_) * A.col(i);
-    Xsig.col(i+1+n_x_) = x_ - sqrt(lambda_+n_x_) * A.col(i);
-  }
-
-/*******************************************************************************
- * Student part end
- ******************************************************************************/
-
-  //write result
-  *Xsig_out = Xsig;
+ // SigmaPointPrediction();  
+  //std::cout << "Xsig = " << std::endl << Xsig_aug_ << std::endl;
   
 }
+
+void UKF::AugmentedSigmaPoints(MatrixXd* Xsig_out) {
+
+  //create augmented mean vector
+  VectorXd x_aug = VectorXd(7);
+
+  //create augmented state covariance
+  MatrixXd P_aug = MatrixXd(7, 7);
+
+  //create sigma point matrix
+  MatrixXd Xsig_aug = MatrixXd(n_aug_, 2 * n_aug_ + 1);
+
+  //create augmented mean state
+  x_aug.head(5) = x_;
+  x_aug(5) = 0;
+  x_aug(6) = 0;
+
+  //create augmented covariance matrix
+  P_aug.fill(0.0);
+  P_aug.topLeftCorner(5,5) = P_;
+  P_aug(5,5) = std_a_*std_a_;
+  P_aug(6,6) = std_yawdd_*std_yawdd_;
+
+  //create square root matrix
+  MatrixXd L = P_aug.llt().matrixL();
+
+  //create augmented sigma points
+  Xsig_aug.col(0)  = x_aug;
+  for (int i = 0; i< n_aug_; i++)
+  {
+    Xsig_aug.col(i+1)       = x_aug + sqrt(lambda_+n_aug_) * L.col(i);
+    Xsig_aug.col(i+1+n_aug_) = x_aug - sqrt(lambda_+n_aug_) * L.col(i);
+  }
+  
+
+  //write result
+  *Xsig_out = Xsig_aug;
+  
+}
+
+
 
 /**
  * Updates the state and the state covariance matrix using a laser measurement.

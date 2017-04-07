@@ -111,8 +111,8 @@ public:
   
   
   //Custom Functions and variables
-  MatrixXd Xsig;
-  void GenerateSigmaPoints(MatrixXd* Xsig_out);
+  MatrixXd Xsig_aug_;
+  void AugmentedSigmaPoints(MatrixXd* Xsig_out);
 
 
 };
