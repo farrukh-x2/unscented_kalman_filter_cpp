@@ -159,7 +159,8 @@ int main(int argc, char* argv[]) {
   for (size_t k = 0; k < number_of_measurements; ++k) {
       
       //Only work with radar to start with
-      if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::RADAR) {
+      //if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::LASER) 
+          {
           
       
       
