@@ -157,14 +157,7 @@ int main(int argc, char* argv[]) {
 
 
   for (size_t k = 0; k < number_of_measurements; ++k) {
-      
-      //Only work with radar to start with
-      //if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::LASER) 
-          {
-          
-      
-      
-      
+           
     // Call the UKF-based fusion
     ukf.ProcessMeasurement(measurement_pack_list[k]);
 
@@ -219,7 +212,7 @@ int main(int argc, char* argv[]) {
     
     estimations.push_back(ukf_x_cartesian_);
     ground_truth.push_back(gt_pack_list[k].gt_values_);
-      }
+      
   }
 
   // compute the accuracy (RMSE)

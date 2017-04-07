@@ -64,13 +64,7 @@ UKF::UKF() {
   
   previous_timestamp_ = 0;
   
-  /*
-   P_ <<    1,   0,    0.0030,   -0.0022,   -0.0020,
-          -0.0013,    0.0077,    0.0011,    0.0071,    0.0060,
-           0.0030,    0.0011,    0.0054,    0.0007,    0.0008,
-          -0.0022,    0.0071,    0.0007,    0.0098,    0.0100,
-          -0.0020,    0.0060,    0.0008,    0.0100,    0.0123;
-    */      
+       
    P_ << 1, 0, 0,  0, 0,
          0, 1, 0,  0, 0,
          0, 0, 10, 0, 0,
@@ -105,8 +99,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       float phi = meas_package.raw_measurements_(1);
       float ro_dot = meas_package.raw_measurements_(2);
 
-      x_ << (cos(phi) * ro)+ 0.0001, //px
-                 (sin(phi) * ro)+ 0.0001, //py
+      x_ << (cos(phi) * ro)//px
+                 (sin(phi) * ro) //py
                  sqrt(((cos(phi) * ro_dot) * (cos(phi) * ro_dot)) + 
                       ((sin(phi) * ro_dot) * (sin(phi) * ro_dot))), //V
                  0,// is this equal to phi?
@@ -116,8 +110,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       /**
       Initialize state.
       */
-      x_ << meas_package.raw_measurements_[0] + 0.0001, //in case of 0
-            meas_package.raw_measurements_[1] + 0.0001, //in case of 0
+      x_ << meas_package.raw_measurements_[0] , //in case of 0
+            meas_package.raw_measurements_[1] , //in case of 0
             0,
             0,
             0;
@@ -125,12 +119,17 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
     }
 
+    if (fabs(x_(0)) < 0.0001) and (fabs(x_(1)) < 0.0001){
+       x_(0) = 0.0001;
+       x_(1) = 0.0001;
+    }
       
     previous_timestamp_ = meas_package.timestamp_;  
       
     is_initialized_ = true;
     return;
   }
+  
   
     
   float dt = (meas_package.timestamp_ - previous_timestamp_) / 1000000.0;
@@ -151,9 +150,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       
   }
 
-  //std::cout << "Updated state x: " << std::endl << x_ << std::endl;
-  //std::cout << "Updated state covariance P: " << std::endl << P_ << std::endl; 
-    
+ 
 
 }
 
