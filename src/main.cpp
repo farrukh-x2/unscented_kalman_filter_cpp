@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
   // start filtering from the second frame (the speed is unknown in the first
   // frame)
 
-  size_t number_of_measurements = 3;//measurement_pack_list.size();
+  size_t number_of_measurements = measurement_pack_list.size();
 
   // column names for output file
   out_file_ << "px" << "\t";

@@ -115,6 +115,7 @@ public:
   void AugmentedSigmaPoints(MatrixXd* Xsig_out);
   void SigmaPointPrediction(MatrixXd* Xsig_out, double delta_t);
   void PredictMeanAndCovariance(VectorXd* x_out, MatrixXd* P_out);
+  long previous_timestamp_;
 
 };
 
