@@ -99,8 +99,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       float phi = meas_package.raw_measurements_(1);
       float ro_dot = meas_package.raw_measurements_(2);
 
-      x_ << (cos(phi) * ro)//px
-                 (sin(phi) * ro) //py
+      x_ << (cos(phi) * ro),//px
+                 (sin(phi) * ro), //py
                  sqrt(((cos(phi) * ro_dot) * (cos(phi) * ro_dot)) + 
                       ((sin(phi) * ro_dot) * (sin(phi) * ro_dot))), //V
                  0,// is this equal to phi?
@@ -119,7 +119,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
     }
 
-    if (fabs(x_(0)) < 0.0001) and (fabs(x_(1)) < 0.0001){
+    if (fabs(x_(0)) < 0.0001 and fabs(x_(1)) < 0.0001){
        x_(0) = 0.0001;
        x_(1) = 0.0001;
     }
