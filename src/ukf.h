@@ -110,9 +110,10 @@ public:
   void UpdateRadar(MeasurementPackage meas_package);
   
   
-  //Custom Functions
-  
+  //Custom Functions and variables
+  MatrixXd Xsig;
   void GenerateSigmaPoints(MatrixXd* Xsig_out);
+
 
 };
 
