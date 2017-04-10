@@ -1,6 +1,8 @@
 # Unscented Kalman Filter Project
 ---
-#### This project implements Unscented Kalman Filter in C++ for Radar and Lidar data. The Kalman filter estimates positions and velocities in the x and y directions.
+#### This project implements Unscented Kalman Filter in C++ for Radar and Lidar data. The Unscented Kalman filter estimates positions and velocities in the x and y directions.
+
+#### Where the Extended Kalman Filter linearizes the system under deployment, the Unscented Kalman Filter closely represents the actual model in use, of the system. For this reason it converges faster and gives values closer to ground truth values especially for non-straight line motion. 
 
 ## Dependencies
 ###### Works only with linux
