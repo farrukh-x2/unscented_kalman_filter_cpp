@@ -31,4 +31,4 @@ The project contains the following folders:
 
 To check the consistency of the algorithm the NIS score is calculated at each measurement. For Chi-Sq distribution the 95th percentile values for 3 degrees of freedom are below 7.81 and for 2 degrees of freedom are below 5.99. These would apply to Radar and Laser data, respectively. The values of the process noise were tuned so that majority of NIS values fall below 5.99 since that is the lower threshold. This values are given in the graphs below:
 
-![](NIS Values.JPG)
+![](NIS_Values.JPG)
