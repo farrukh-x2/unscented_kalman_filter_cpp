@@ -50,7 +50,6 @@ UKF::UKF() {
 
   Complete the initialization. See ukf.h for other member properties.
 
-  Hint: one or more values initialized above might be wildly off...
   */
   
   is_initialized_ =  false;
@@ -116,7 +115,6 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
             0,
             0;
 
-
     }
 
     if (fabs(x_(0)) < 0.0001 and fabs(x_(1)) < 0.0001){
@@ -172,29 +170,10 @@ void UKF::Prediction(double delta_t) {
   */
   
   AugmentedSigmaPoints(&Xsig_aug_);
-  //std::cout << "Xsig_aug = " << std::endl << Xsig_aug_ << std::endl;
 
   SigmaPointPrediction(&Xsig_pred_ , delta_t);  
-  //std::cout << "Xsig = " << std::endl << Xsig_pred_ << std::endl;
-  
-  //modifying Xsig_pred to compare answers
-  /*Xsig_pred_<<
-         5.9374,  6.0640,   5.925,  5.9436,  5.9266,  5.9374,  5.9389,  5.9374,  5.8106,  5.9457,  5.9310,  5.9465,  5.9374,  5.9359,  5.93744,
-           1.48,  1.4436,   1.660,  1.4934,  1.5036,    1.48,  1.4868,    1.48,  1.5271,  1.3104,  1.4787,  1.4674,    1.48,  1.4851,    1.486,
-          2.204,  2.2841,  2.2455,  2.2958,   2.204,   2.204,  2.2395,   2.204,  2.1256,  2.1642,  2.1139,   2.204,   2.204,  2.1702,   2.2049,
-         0.5367, 0.47338, 0.67809, 0.55455, 0.64364, 0.54337,  0.5367, 0.53851, 0.60017, 0.39546, 0.51900, 0.42991, 0.530188,  0.5367, 0.535048,
-          0.352, 0.29997, 0.46212, 0.37633,  0.4841, 0.41872,   0.352, 0.38744, 0.40562, 0.24347, 0.32926,  0.2214, 0.28687,   0.352, 0.318159;
 
-  
-  
-  std::cout << "Predicted state" << std::endl;
-  std::cout << x_ << std::endl;
-  std::cout << "Predicted covariance matrix" << std::endl;
-  std::cout << P_ << std::endl;
-   * 
-   * */
-   
-   PredictMeanAndCovariance(&x_, &P_);
+  PredictMeanAndCovariance(&x_, &P_);
 }
 
 
@@ -238,7 +217,6 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
           0, std_laspy_*std_laspy_;
          
   S = S + R;
-
   
   //create matrix for cross correlation Tc
   MatrixXd Tc = MatrixXd(n_x_, n_z);
@@ -279,8 +257,10 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   //print result
   //std::cout << "Updated state x: " << std::endl << x_ << std::endl;
   //std::cout << "Updated state covariance P: " << std::endl << P_ << std::endl;
-  
-  
+
+  //Calculcate NIS value
+  NIS_laser_ = (z_diff.transpose()*(S)).dot(z_diff);
+
 }
 
 /**
@@ -349,38 +329,14 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
           0, 0,std_radrd_*std_radrd_;
   S = S + R;
 
-  
-  //print result
-  //std::cout << "z_sig: " << std::endl << Zsig << std::endl;
-  //std::cout << "z_pred: " << std::endl << z_pred << std::endl;
-
-  //std::cout << "S: " << std::endl << S << std::endl;
-
-  //write result
-  //*z_out = z_pred;
-  //*S_out = S;
-  /*
-  Zsig <<
-      6.1190,  6.2334,  6.1531,  6.1283,  6.1143,  6.1190,  6.1221,  6.1190,  6.0079,  6.0883,  6.1125,  6.1248,  6.1190,  6.1188,  6.12057,
-     0.24428,  0.2337, 0.27316, 0.24616, 0.24846, 0.24428, 0.24530, 0.24428, 0.25700, 0.21692, 0.24433, 0.24193, 0.24428, 0.24515, 0.245239,
-      2.1104,  2.2188,  2.0639,   2.187,  2.0341,  2.1061,  2.1450,  2.1092,  2.0016,   2.129,  2.0346,  2.1651,  2.1145,  2.0786,  2.11295;
-  */
   //create matrix for cross correlation Tc
   MatrixXd Tc = MatrixXd(n_x_, n_z);
   
   //incoming radar measurement
   VectorXd z = VectorXd(n_z);
- /* z <<
-      5.9214,
-      0.2187,
-      2.0062;
-   */   
   z << meas_package.raw_measurements_(0),
        meas_package.raw_measurements_(1),
        meas_package.raw_measurements_(2);
-  
-  //std::cout<<"z "<<z<< endl;
-  
   
   //calculate cross correlation matrix
   Tc.fill(0.0);
@@ -418,12 +374,11 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   //print result
   //std::cout << "Updated state x: " << std::endl << x_ << std::endl;
   //std::cout << "Updated state covariance P: " << std::endl << P_ << std::endl;
-  
+
+  //Calculcate NIS value
+  NIS_radar_ = (z_diff.transpose()*(S)).dot(z_diff);
+
 }
-
-
-
-
 
 void UKF::AugmentedSigmaPoints(MatrixXd* Xsig_out) {
 
@@ -469,8 +424,6 @@ void UKF::SigmaPointPrediction(MatrixXd* Xsig_out, double delta_t) {
 
   //create matrix with predicted sigma points as columns
   MatrixXd Xsig_pred = MatrixXd(n_x_, 2 * n_aug_ + 1);
-
-  //double delta_t = 0.1; //time diff in sec
 
   //predict sigma points
   for (int i = 0; i< 2*n_aug_+1; i++)
