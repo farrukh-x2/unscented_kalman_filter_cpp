@@ -116,6 +116,12 @@ public:
   void SigmaPointPrediction(MatrixXd* Xsig_out, double delta_t);
   void PredictMeanAndCovariance(VectorXd* x_out, MatrixXd* P_out);
   long previous_timestamp_;
+  
+  // measurement matrix
+  MatrixXd H_;
+
+  // measurement covariance matrix
+  MatrixXd R_;
 
 };
 

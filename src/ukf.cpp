@@ -64,11 +64,19 @@ UKF::UKF() {
   previous_timestamp_ = 0;
   
        
-   P_ << 1, 0, 0,  0, 0,
-         0, 1, 0,  0, 0,
-         0, 0, 10, 0, 0,
-         0, 0, 0, 10, 0,
-         0, 0, 0,  0, 10;       
+  P_ << 1, 0, 0,  0, 0,
+        0, 1, 0,  0, 0,
+        0, 0, 10, 0, 0,
+        0, 0, 0, 10, 0,
+        0, 0, 0,  0, 10;   
+   
+  R_ = MatrixXd(2, 2);
+  R_ << 0.0225, 0,
+        0, 0.0225;
+
+  H_ = MatrixXd(2, 5);
+  H_<< 1,0,0,0,0,
+       0,1,0,0,0;   
           
 }
 
@@ -149,7 +157,6 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   }
 
  
-
 }
 
 /**
@@ -190,69 +197,36 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   You'll also need to calculate the lidar NIS.
   */
-  
+  /*
+   * 
+   * Since Lidar Measurement is Linear we can use standard Kalman filter update
+   * 
+   * */
+   
   //set measurement dimension, lidar can measure px, py
   int n_z = 2;
-
-  //mean predicted measurement
-  VectorXd z_pred = VectorXd(n_z);
-  z_pred.fill(0.0);
-  for (int i=0; i < 2*n_aug_+1; i++) {
-      z_pred = z_pred + weights_(i) * Xsig_pred_.col(i).head(2);
-  }
-
-  //measurement covariance matrix S
-  MatrixXd S = MatrixXd(n_z,n_z);
-  S.fill(0.0);
-  for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 simga points
-    //residual
-    VectorXd z_diff = Xsig_pred_.col(i).head(2) - z_pred;
-
-    S = S + weights_(i) * z_diff * z_diff.transpose();
-  }
-
-  //add measurement noise covariance matrix
-  MatrixXd R = MatrixXd(n_z,n_z);
-  R <<    std_laspx_*std_laspx_, 0, 
-          0, std_laspy_*std_laspy_;
-         
-  S = S + R;
-  
-  //create matrix for cross correlation Tc
-  MatrixXd Tc = MatrixXd(n_x_, n_z);
-  
   //incoming lidar measurement
   VectorXd z = VectorXd(n_z);
 
   z << meas_package.raw_measurements_(0),
-       meas_package.raw_measurements_(1),
-     
+       meas_package.raw_measurements_(1);
+       
+  VectorXd z_pred = H_ * x_;
+  VectorXd y = z - z_pred;
+  MatrixXd Ht = H_.transpose();
+  MatrixXd S = H_ * P_ * Ht + R_;
+  MatrixXd Si = S.inverse();
+  MatrixXd PHt = P_ * Ht;
+  MatrixXd K = PHt * Si;
   
-  //calculate cross correlation matrix
-  Tc.fill(0.0);
-  for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 simga points
-
-    //residual
-    VectorXd z_diff = Xsig_pred_.col(i).head(2) - z_pred;
-   
-    // state difference
-    VectorXd x_diff = Xsig_pred_.col(i) - x_;
-    //angle normalization
-    while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
-    while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
-
-    Tc = Tc + weights_(i) * x_diff * z_diff.transpose();
-  }
-
-  //Kalman gain K;
-  MatrixXd K = Tc * S.inverse();
-
+  //new estimate
+  x_ = x_ + (K * y);
+  long x_size = x_.size();
+  MatrixXd I = MatrixXd::Identity(x_size, x_size);
+  P_ = (I - K * H_) * P_;
+  
   //residual
   VectorXd z_diff = z - z_pred;
-
-  //update state mean and covariance matrix
-  x_ = x_ + K * z_diff;
-  P_ = P_ - K*S*K.transpose();
 
   //print result
   //std::cout << "Updated state x: " << std::endl << x_ << std::endl;
@@ -260,7 +234,8 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   //Calculcate NIS value
   NIS_laser_ = (z_diff.transpose()*(S)).dot(z_diff);
-
+  
+  
 }
 
 /**
