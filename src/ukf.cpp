@@ -270,6 +270,13 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     double v1 = cos(yaw)*v;
     double v2 = sin(yaw)*v;
 
+    if (fabs(p_x) < 0.0001) 
+       p_x = 0.0001;
+       
+    if (fabs(p_y) < 0.0001) 
+       p_y = 0.0001;
+      
+
     // measurement model
     Zsig(0,i) = sqrt(p_x*p_x + p_y*p_y);                        //r
     Zsig(1,i) = atan2(p_y,p_x);                                 //phi
